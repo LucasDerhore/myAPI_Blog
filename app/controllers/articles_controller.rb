@@ -1,5 +1,10 @@
 class ArticlesController < ApplicationController
+  
+
   before_action :set_article, only: %i[ show update destroy ]
+
+  before_action :authenticate_user, only: [:create, :show, :new]
+  before_action :authenticate_user_edit, only: [:edit, :update]
 
   # GET /articles
   def index
@@ -16,12 +21,17 @@ class ArticlesController < ApplicationController
   # POST /articles
   def create
     @article = Article.new(article_params)
+    @article.user = logged_in_user
 
     if @article.save
       render json: @article, status: :created, location: @article
     else
       render json: @article.errors, status: :unprocessable_entity
     end
+  end
+
+  def edit
+    @article = Article.find(params[:id])
   end
 
   # PATCH/PUT /articles/1
@@ -35,7 +45,7 @@ class ArticlesController < ApplicationController
 
   # DELETE /articles/1
   def destroy
-    @article.destroy
+    authenticate_user ? @article.destroy : (render json: {error: 'acces denied'}, statut: 401)
   end
 
   private
@@ -47,5 +57,11 @@ class ArticlesController < ApplicationController
     # Only allow a list of trusted parameters through.
     def article_params
       params.require(:article).permit(:title, :content)
+    end
+
+    def authenticate_user
+      unless logged_in_user
+        return true
+      end
     end
 end
