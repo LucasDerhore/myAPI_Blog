@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
-   
+  
   resource :users, only: [:create]
-  resources :articles
+  resources :articles do
+    resources :comments
+  end
 
   
   post "/login", to: "users#login"
